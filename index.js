@@ -1,4 +1,5 @@
 var puppeteer = require("puppeteer");
+var fs = require('fs');
 
 (async function main(){
 try{
@@ -17,6 +18,10 @@ try{
     await page.waitForSelector('#cm_cr-review_list');
     const divs = await page.$$('#cm_cr-review_list > div.a-section.review.aok-relative');
 
+    var data = {
+        categories: []
+    }
+    
     for(const div of divs){
         const reviewerName =await div.$eval('.a-profile-content', span => span.innerText);
         console.log('Reviewer Name:', reviewerName);
@@ -30,10 +35,23 @@ try{
         const review =await div.$eval('span[data-hook = "review-body"]', span => span.innerText);
         console.log('Review:', review);
         console.log('----------------------------------------------------------------------------');
+        let obj = {
+            ReviewerName: reviewerName,
+            Rating: rating,
+            ProductDetails: productDetails,
+            Review: review
+        }
+        data.categories.push(obj);
     }
-
-
-
+    fs.appendFile("categories.json", JSON.stringify(data.categories), function(err){
+        if(err){
+            console.log("Error");
+        }else{
+            console.log("Data Scrapped");
+        }
+    })
+    await page.close();
+    await browser.close();
 }catch(e){
 console.log('our error',e);
 }
